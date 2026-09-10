@@ -1,0 +1,9 @@
+type: object
+description: Некорректный запрос
+required: [code, message]
+properties:
+  code:
+    type: integer
+    format: int32
+  message:
+    type: string

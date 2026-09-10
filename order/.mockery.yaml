@@ -1,0 +1,16 @@
+with-expecter: true
+dir: "{{.InterfaceDir}}/mocks"
+outpkg: mocks
+filename: "mock_{{ .InterfaceNameSnake }}.go"
+mockname: "Mock{{.InterfaceName}}"
+packages:
+  boilerplates/order/internal/repository:
+    interfaces:
+      OrderRepository:          # для тестов сервиса
+  boilerplates/order/internal/client/grpc:
+    interfaces:
+      InventoryClient:          # для тестов сервиса
+      PaymentClient:            # для тестов сервиса
+  boilerplates/order/internal/service:
+    interfaces:
+      OrderService:             # для тестов api

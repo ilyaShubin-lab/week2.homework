@@ -1,0 +1,9 @@
+type: object
+description: Внутренняя ошибка сервера
+required: [code, message]
+properties:
+  code:
+    type: integer
+    format: int32
+  message:
+    type: string

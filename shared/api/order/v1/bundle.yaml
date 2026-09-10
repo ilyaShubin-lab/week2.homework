@@ -1,0 +1,285 @@
+openapi: 3.0.3
+info:
+  title: OrderService API
+  version: 1.0.0
+  description: Сервис заказов на постройку космических кораблей
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+tags:
+  - name: Order
+    description: Операции с заказами
+paths:
+  /api/v1/orders:
+    post:
+      operationId: CreateOrder
+      summary: Создать заказ
+      tags:
+        - Order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create_order_request'
+      responses:
+        '200':
+          description: Заказ создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create_order_response'
+        '400':
+          description: Невалидный запрос или детали не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_request_error'
+        '500':
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+        '502':
+          description: InventoryService недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_gateway_error'
+  /api/v1/orders/{order_uuid}:
+    get:
+      operationId: GetOrder
+      summary: Получить заказ по UUID
+      tags:
+        - Order
+      parameters:
+        - $ref: '#/components/parameters/order_uuid'
+      responses:
+        '200':
+          description: Заказ найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/order_dto'
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '500':
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+  /api/v1/orders/{order_uuid}/pay:
+    post:
+      operationId: PayOrder
+      summary: Оплатить заказ
+      tags:
+        - Order
+      parameters:
+        - $ref: '#/components/parameters/order_uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/pay_order_request'
+      responses:
+        '200':
+          description: Заказ оплачен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/pay_order_response'
+        '400':
+          description: Невалидный способ оплаты
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_request_error'
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '409':
+          description: Заказ уже оплачен или отменён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/conflict_error'
+        '500':
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+        '502':
+          description: PaymentService недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_gateway_error'
+  /api/v1/orders/{order_uuid}/cancel:
+    post:
+      operationId: CancelOrder
+      summary: Отменить заказ
+      tags:
+        - Order
+      parameters:
+        - $ref: '#/components/parameters/order_uuid'
+      responses:
+        '204':
+          description: Заказ отменён
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '409':
+          description: Оплаченный заказ отменить нельзя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/conflict_error'
+        '500':
+          description: Внутренняя ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+components:
+  schemas:
+    create_order_request:
+      type: object
+      required:
+        - user_uuid
+        - part_uuids
+      properties:
+        user_uuid:
+          type: string
+          format: uuid
+        part_uuids:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uuid
+    create_order_response:
+      type: object
+      required:
+        - order_uuid
+        - total_price
+      properties:
+        order_uuid:
+          type: string
+          format: uuid
+        total_price:
+          type: number
+          format: double
+    bad_request_error:
+      description: Некорректный вопрос
+      content:
+        application/json:
+          schema:
+            $ref: ./generic_error.yaml
+    internal_server_error:
+      description: Упало на сервере
+      content:
+        application/json:
+          schema:
+            $ref: ./generic_error.yaml
+    bad_gateway_error:
+      description: Сломался апстрим
+      content:
+        application/json:
+          schema:
+            $ref: ./generic_error.yaml
+    payment_method:
+      type: string
+      enum:
+        - PAYMENT_METHOD_UNSPECIFIED
+        - PAYMENT_METHOD_CARD
+        - PAYMENT_METHOD_SBP
+        - PAYMENT_METHOD_CREDIT_CARD
+        - PAYMENT_METHOD_INVESTOR_MONEY
+    order_status:
+      type: string
+      enum:
+        - PENDING_PAYMENT
+        - PAID
+        - CANCELLED
+      description: Статус заказа
+    order_dto:
+      type: object
+      required:
+        - order_uuid
+        - user_uuid
+        - part_uuids
+        - total_price
+        - status
+      properties:
+        order_uuid:
+          type: string
+          format: uuid
+        user_uuid:
+          type: string
+          format: uuid
+        part_uuids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        total_price:
+          type: number
+          format: double
+        transaction_uuid:
+          type: string
+          format: uuid
+          description: Появляется только после оплаты
+        payment_method:
+          $ref: '#/components/schemas/payment_method'
+        status:
+          $ref: '#/components/schemas/order_status'
+    not_found_error:
+      description: Заказ не найден
+      content:
+        application/json:
+          schema:
+            $ref: ./generic_error.yaml
+    pay_order_request:
+      type: object
+      required:
+        - payment_method
+      properties:
+        payment_method:
+          $ref: '#/components/schemas/payment_method'
+    pay_order_response:
+      type: object
+      required:
+        - transaction_uuid
+      properties:
+        transaction_uuid:
+          type: string
+          format: uuid
+    conflict_error:
+      description: Заказ уже оплачен и не может быть отменён
+      content:
+        application/json:
+          schema:
+            $ref: ./generic_error.yaml
+  parameters:
+    order_uuid:
+      name: order_uuid
+      in: path
+      required: true
+      description: UUID заказа
+      schema:
+        type: string
+        format: uuid

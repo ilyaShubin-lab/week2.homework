@@ -1,0 +1,5 @@
+          description: Авторизирован, но нельзя
+          content:
+            application/json: 
+              schema:
+                $ref: './generic_error.yaml'

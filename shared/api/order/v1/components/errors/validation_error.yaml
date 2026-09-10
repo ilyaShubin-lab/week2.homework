@@ -1,0 +1,5 @@
+          description: 	Прошло по схеме, но невалидно по смыслу
+          content:
+            application/json: 
+              schema:
+                $ref: './generic_error.yaml'

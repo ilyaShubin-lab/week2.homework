@@ -1,0 +1,9 @@
+with-expecter: true
+dir: "{{.InterfaceDir}}/mocks"
+outpkg: mocks
+filename: "mock_{{ .InterfaceNameSnake }}.go"
+mockname: "Mock{{.InterfaceName}}"
+packages:
+  boilerplates/payment/internal/service:
+    interfaces:
+      PaymentService:

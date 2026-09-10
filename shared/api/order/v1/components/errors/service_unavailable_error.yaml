@@ -1,0 +1,5 @@
+          description: Сервис недоступен
+          content:
+            application/json: 
+              schema:
+                $ref: './generic_error.yaml'
